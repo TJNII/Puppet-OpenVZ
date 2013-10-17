@@ -3,7 +3,7 @@
 # A reboot is required after install.
 # Guide: http://wiki.centos.org/HowTos/Virtualization/OpenVZ
 class openvz (
-  $venet0_ipaddr  = "172.31.254.1",
+  $venet0_network = "172.31.254.0",
   $venet0_netmask = "255.255.255.0",
   $manage_firewall = true,
 #  $firewall_allowed_interfaces = "eth0",
@@ -43,19 +43,12 @@ class openvz (
     source  => "puppet:///modules/openvz/etc/selinux/config",
   }
 
-  # Interface config
-  file { '/etc/sysconfig/network-scripts/ifcfg-venet0':
-    ensure  => file,
-    content => template("openvz/etc/sysconfig/network-scripts/ifcfg-venet0.erb")
-  }
-
   service { 'vz':
     ensure    => running,
     enable    => true,
     require   => [ Package['vzkernel'],
                    Package['vzctl'],
                    Package['vzquota'],
-                   File['/etc/sysconfig/network-scripts/ifcfg-venet0'],
                    ],
   }
 
@@ -73,7 +66,7 @@ class openvz (
         chain    => 'POSTROUTING',
         jump     => 'MASQUERADE',
         proto    => 'all',
-        source   => "${venet0_ipaddr}/${venet0_netmask}",
+        source   => "${venet0_network}/${venet0_netmask}",
         table    => 'nat',
       }
     }
